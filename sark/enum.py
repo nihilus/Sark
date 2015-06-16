@@ -123,14 +123,15 @@ class EnumMembers(object):
 
     def __iter__(self):
         """Iterate all members of the enum"""
-        return (EnumMember(cid) for cid in iter_enum_constant_ids(self._eid))
+        return (EnumMember(cid) for cid in _iter_enum_constant_ids(self._eid))
 
     def add(self, name, value, bitmask=DEFMASK):
         """Add an enum member
 
-        :param name: Name of the member
-        :param value: value of the member
-        :param bitmask: bitmask. Only use if enum is a bitfield.
+        Args:
+            name: Name of the member
+            value: value of the member
+            bitmask: bitmask. Only use if enum is a bitfield.
         """
         _add_enum_member(self._eid, name, value, bitmask)
 
@@ -167,8 +168,10 @@ class Enum(object):
         Get an existing enum.
 
         Only provide one of `name` and `eid`.
-        :param name: Name of the enum
-        :param eid: Enum ID
+
+        Args:
+            name: Name of the enum
+            eid: Enum ID
         """
         if None not in (name, eid):
             raise TypeError("Provide only a `name` or an `eid`.")
@@ -333,7 +336,7 @@ class EnumMember(object):
         return "<EnumMember(name='{}.{}')>".format(self.parent.name, self.name)
 
 
-def iter_bitmasks(eid):
+def _iter_bitmasks(eid):
     """Iterate all bitmasks in a given enum.
 
     Note that while 0xFFFFFFFF indicates no-more-bitmasks, it is also a
@@ -349,7 +352,7 @@ def iter_bitmasks(eid):
         yield bitmask
 
 
-def iter_enum_member_values(eid, bitmask):
+def _iter_enum_member_values(eid, bitmask):
     """Iterate member values with given bitmask inside the enum
 
     Note that 0xFFFFFFFF can either indicate end-of-values or a valid value.
@@ -363,7 +366,7 @@ def iter_enum_member_values(eid, bitmask):
         yield value
 
 
-def iter_serial_enum_member(eid, value, bitmask):
+def _iter_serial_enum_member(eid, value, bitmask):
     """Iterate serial and CID of enum members with given value and bitmask.
 
     Here only valid values are returned, as `idaapi.BADNODE` always indicates
@@ -375,15 +378,15 @@ def iter_serial_enum_member(eid, value, bitmask):
         cid, serial = idaapi.get_next_serial_enum_member(cid, serial)
 
 
-def iter_enum_constant_ids(eid):
+def _iter_enum_constant_ids(eid):
     """Iterate the constant IDs of all members in the given enum"""
-    for bitmask in iter_bitmasks(eid):
-        for value in iter_enum_member_values(eid, bitmask):
-            for cid, serial in iter_serial_enum_member(eid, value, bitmask):
+    for bitmask in _iter_bitmasks(eid):
+        for value in _iter_enum_member_values(eid, bitmask):
+            for cid, serial in _iter_serial_enum_member(eid, value, bitmask):
                 yield cid
 
 
-def iter_enum_ids():
+def _iter_enum_ids():
     """Iterate the IDs of all enums in the IDB"""
     for index in xrange(idaapi.get_enum_qty()):
         yield idaapi.getn_enum(index)
@@ -391,4 +394,4 @@ def iter_enum_ids():
 
 def enums():
     """Iterate all enums in the IDB"""
-    return (Enum(eid=eid) for eid in iter_enum_ids())
+    return (Enum(eid=eid) for eid in _iter_enum_ids())

@@ -180,6 +180,10 @@ class Function(object):
         """Function's Name"""
         return idc.Name(self.startEA)
 
+    @property
+    def demangled(self):
+        return idaapi.demangle_name2(self.name, 0)
+
     @name.setter
     def name(self, name):
         """Set the function name.
@@ -196,8 +200,9 @@ class Function(object):
         the IDB. to make IDA automatically add a counter to the name (like in the GUI,)
         use `anyway=True`.
 
-        :param name: Desired name.
-        :param anyway: `True` to set anyway.
+        Args:
+            name: Desired name.
+            anyway: `True` to set anyway.
         """
         set_name(self.startEA, name, anyway=anyway)
 
@@ -238,6 +243,14 @@ class Function(object):
 
 
 def iter_function_lines(func_ea):
+    """Iterate the lines of a function.
+
+    Args:
+        func_ea (idaapi.func_t, int): The function to iterate.
+
+    Returns:
+        Iterator over all the lines of the function.
+    """
     for line in idautils.FuncItems(get_ea(func_ea)):
         yield Line(line)
 
@@ -245,8 +258,12 @@ def iter_function_lines(func_ea):
 def functions(start=None, end=None):
     """Get all functions in range.
 
-    :param start: Start address of the range. Defaults to IDB start.
-    :param end: End address of the range. Defaults to IDB end.
+    Args:
+        start: Start address of the range. Defaults to IDB start.
+        end: End address of the range. Defaults to IDB end.
+
+    Returns:
+        This is a generator that iterates over all the functions in the IDB.
     """
     start, end = fix_addresses(start, end)
 
